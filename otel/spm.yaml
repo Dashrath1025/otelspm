@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: jaegerspm
+  name: spm-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spm
+  template:
+    metadata:
+      labels:
+        app: spm
+    spec:
+      containers:
+      - name: spm
+        image: thinclientacrv01.azurecr.io/spm:v1
+        ports:
+        - containerPort: 80
+        env:
+        # - name: ServiceName
+        #   value: "spm-service"
+        - name: ErrorRate
+          value: "0.5"
+        - name: OTEL_EXPORTER_JAEGER_AGENT_HOST
+          value: jaeger
+        - name: OTEL_EXPORTER_JAEGER_AGENT_PORT
+          value: "6831"
+        - name: OTEL_EXPORTER_JAEGER_ENDPOINT
+          value: "http://10.224.0.37:14278/api/traces"
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "http://10.224.0.108:4317"
+        - name: ASPNETCORE_HTTP_PORTS
+          value: "80"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spm-service
+  namespace: jaegerspm
+spec:
+  selector:
+    app: spm
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
