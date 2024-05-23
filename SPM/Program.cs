@@ -12,28 +12,25 @@ using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure tracing with OpenTelemetry and export to Jaeger
-var tracerProvider = Sdk.CreateTracerProviderBuilder()
-    .AddAspNetCoreInstrumentation()
-    .AddHttpClientInstrumentation()
-    .AddOtlpExporter(options =>
+builder.Logging
+    .AddOpenTelemetry(options =>
     {
-        options.Endpoint = new Uri(builder.Configuration["OtlpExporterEndpoint"]); // Update with your OTLP exporter endpoint
-    })
-    .Build();
+        options.IncludeFormattedMessage = true; //the logged messages should include formatted messages
+        options.IncludeScopes = true; //Scopes can provide additional context for log messages
+        var resBuilder = ResourceBuilder.CreateDefault();
+      //  var serviceName = builder.Configuration["ServiceName"]!;
+        var serviceName = builder.Configuration["ServiceName"]!;
+        resBuilder.AddService(serviceName);
+        options.SetResourceBuilder(resBuilder)
+        .AddOtlpExporter(options =>
+         {
+             options.Endpoint = new Uri(Environment.GetEnvironmentVariable("OtlpExporterEndpoint") ?? "http://localhost:4317"); // Update with your OTLP exporter endpoint
+         });
 
-// Ensure tracer provider is set globally
-Sdk.SetDefaultTextMapPropagator(new TraceContextPropagator());
-Activity.DefaultIdFormat = ActivityIdFormat.W3C;
-Activity.ForceDefaultIdFormat = true;
+    });
 
 // Add services to the container
-builder.Logging.AddOpenTelemetry(options =>
-{
-    options.IncludeFormattedMessage = true; // The logged messages should include formatted messages
-    options.IncludeScopes = true; // Scopes can provide additional context for log messages
-    options.AddOtlpExporter(); // OTLP is a protocol used to export telemetry data
-});
+
 
 builder.Services.AddControllers();
 builder.Services.AddHttpLogging(o => o.LoggingFields = HttpLoggingFields.All);
@@ -46,6 +43,10 @@ builder.Services.Configure<AspNetCoreTraceInstrumentationOptions>(options =>
 });
 
 builder.Services.AddOpenTelemetry()
+    .ConfigureResource(b =>
+    {
+        b.AddService(builder.Configuration["ServiceName"]!);
+    })
     .WithTracing(b => b
         .AddAspNetCoreInstrumentation() // Instrument ASP.NET Core for tracing HTTP requests and middleware.
         .AddHttpClientInstrumentation() // Instrument HTTP client for tracing outgoing requests.

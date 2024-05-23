@@ -1,8 +1,7 @@
 {
   "ExpandedNodes": [
-    "",
-    "\\Configs"
+    ""
   ],
-  "SelectedNode": "\\Configs\\prometheus.yml",
+  "SelectedNode": "\\OTEL_SPM.sln",
   "PreviewInSolutionExplorer": false
 }
