@@ -1,0 +1,22 @@
+global:
+  scrape_interval:     10s # time interval for scraping metrics from targets.
+  evaluation_interval: 10s #  time interval for evaluating rules and recording metrics.
+
+scrape_configs:
+
+  - job_name: aggregated-trace-metrics
+    static_configs:
+      - targets:
+          - otel-collector:8889
+  - job_name: jaeger
+    static_configs:
+      - targets:
+         - jaeger:14269
+        #- spm:80
+            
+
+  - job_name: services
+    static_configs:
+      - targets:
+          - spm:80
+          

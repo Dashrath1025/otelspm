@@ -1,0 +1,51 @@
+# receive telemetry data via gRPC and HTTP protocols.
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+
+exporters:
+  # Exports metrics to Prometheus, listening on port 8889.    
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+  # Exports telemetry data to Jaeger
+  otlp:
+    endpoint: "jaeger:4317"
+    tls:
+      insecure: true
+   # Exports logs to Loki via HTTP endpoint
+  # loki:
+  #   endpoint: http://loki:3100/loki/api/v1/push
+
+connectors:
+  spanmetrics:
+    histogram:
+      explicit:
+        buckets: [ 5ms, 10ms, 25ms, 50ms, 100ms, 250ms, 500ms, 1000ms ]
+
+processors:
+  resource:
+    attributes:
+      - action: insert
+        key: service_name
+        from_attribute: service.name
+      # - action: insert
+      #   key: loki.resource.labels
+      #   value: service_name
+
+service:
+  pipelines:
+     # pipeline for tracing telemetry data:  
+    traces:
+      receivers: [ otlp ] #Receives telemetry data via OTLP receiver
+      exporters: [ otlp, spanmetrics ] #Exports telemetry data to OTLP and spanmetrics exporters
+    #pipeline for metrics telemetry data
+    metrics:
+      receivers: [ spanmetrics ]
+      exporters: [ prometheus ]
+    #pipeline for log telemetry data
+    # logs:
+    #   receivers: [ otlp ]
+    #   processors: [ resource ]
+    #   exporters: [ loki ]

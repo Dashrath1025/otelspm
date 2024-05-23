@@ -1,0 +1,14 @@
+apiVersion: 1
+providers:
+- name: 'default'
+  orgId: 1
+  folder: '' #dashboards will be placed. In this case, it's an empty string, meaning the dashboards will be placed in the root folder.
+  folderUid: '' #Unique identifier of the folder.
+  type: file
+  disableDeletion: false #whether dashboards provisioned by this provider can be deleted manually from the Grafana UI
+  editable: true
+  #frequently Grafana should check for changes in the provisioned dashboard files
+  updateIntervalSeconds: 10
+  options:
+    path: /etc/grafana/provisioning/dashboards
+
